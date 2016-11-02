@@ -10,4 +10,4 @@ install:
  - go get github.com/golang/glog
 
 script:
- - go test
+ - go test -cover
