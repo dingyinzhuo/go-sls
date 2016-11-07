@@ -1,9 +1,3 @@
-/*
-Package sls implements the SDK(v0.5.0) of Simple Log Service(abbr. SLS).
-
-For more description about SLS, please read this article:
-http://gitlab.alibaba-inc.com/sls/doc.
-*/
 package sls
 
 import (
@@ -92,6 +86,7 @@ func (p *LogProject) GetLogStore(name string) (*LogStore, error) {
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
+
 	r, err := request(p, "GET", "/logstores/"+name, h, nil)
 	if err != nil {
 		return nil, NewClientError(err.Error())
@@ -99,10 +94,11 @@ func (p *LogProject) GetLogStore(name string) (*LogStore, error) {
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, err
 	}
+
 	s := &LogStore{}
 	json.Unmarshal(buf, s)
 	s.project = p
@@ -142,7 +138,7 @@ func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) error {
 
 	body, _ = ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(body, err)
 		return err
 	}
@@ -159,9 +155,10 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	body, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(body, err)
 		return err
 	}
@@ -185,6 +182,7 @@ func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) 
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	h := map[string]string{
 		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
 		"Content-Type":      "application/json",
@@ -197,7 +195,7 @@ func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) 
 
 	body, _ = ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(body, err)
 		return err
 	}
@@ -221,10 +219,11 @@ func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, 
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, 0, err
 	}
+
 	type Body struct {
 		MachineGroups []string
 		Count         int
@@ -246,6 +245,7 @@ func (p *LogProject) CheckMachineGroupExist(name string) (exist bool, err error)
 	if err != nil {
 		return false, NewClientError(err.Error())
 	}
+
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
 		err := new(Error)
@@ -269,12 +269,14 @@ func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 	if err != nil {
 		return nil, NewClientError(err.Error())
 	}
+
 	buf, _ := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, err
 	}
+
 	m = new(MachineGroup)
 	json.Unmarshal(buf, m)
 	m.project = p
@@ -293,12 +295,12 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) error {
 		"Content-Type":      "application/json",
 		"Accept-Encoding":   "deflate", // TODO: support lz4
 	}
-
 	resp, err := request(p, "POST", "/machinegroups", h, body)
 	if err != nil {
 		return NewClientError(err.Error())
 	}
 
+	body, _ = ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		err := new(Error)
 		json.Unmarshal(body, err)
@@ -313,6 +315,7 @@ func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	h := map[string]string{
 		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
 		"Content-Type":      "application/json",
@@ -322,9 +325,10 @@ func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	body, _ = ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(body, err)
 		return err
 	}
@@ -340,12 +344,14 @@ func (p *LogProject) DeleteMachineGroup(name string) (err error) {
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	body, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
 		err := new(Error)
 		json.Unmarshal(body, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -366,10 +372,11 @@ func (p *LogProject) ListConfig(offset, size int) (cfgNames []string, total int,
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, 0, err
 	}
+
 	type Body struct {
 		Total   int
 		Configs []string
@@ -400,6 +407,7 @@ func (p *LogProject) CheckConfigExist(name string) (exist bool, err error) {
 		}
 		return false, err
 	}
+
 	c := &LogConfig{}
 	json.Unmarshal(buf, c)
 	return true, nil
@@ -430,11 +438,11 @@ func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
 
 // UpdateConfig updates a config.
 func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return NewClientError(err.Error())
 	}
+
 	h := map[string]string{
 		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
 		"Content-Type":      "application/json",
@@ -456,7 +464,6 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 
 // CreateConfig creates a new config in SLS.
 func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return NewClientError(err.Error())
@@ -467,7 +474,6 @@ func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
 		"Content-Type":      "application/json",
 		"Accept-Encoding":   "deflate", // TODO: support lz4
 	}
-
 	r, err := request(p, "POST", "/configs", h, body)
 	if err != nil {
 		return NewClientError(err.Error())
@@ -487,7 +493,6 @@ func (p *LogProject) DeleteConfig(name string) (err error) {
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
-
 	r, err := request(p, "DELETE", "/configs/"+name, h, nil)
 	if err != nil {
 		return NewClientError(err.Error())
@@ -499,6 +504,7 @@ func (p *LogProject) DeleteConfig(name string) (err error) {
 		json.Unmarshal(body, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -512,12 +518,14 @@ func (p *LogProject) GetAppliedMachineGroups(confName string) (groupNames []stri
 	if err != nil {
 		return nil, NewClientError(err.Error())
 	}
+
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, err
 	}
+
 	type Body struct {
 		Count         int
 		Machinegroups []string
@@ -533,7 +541,6 @@ func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, er
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
-
 	uri := fmt.Sprintf("/machinegroups/%v/configs", groupName)
 	r, err := request(p, "GET", uri, h, nil)
 	if err != nil {
@@ -542,10 +549,11 @@ func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, er
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return nil, err
 	}
+
 	type Cfg struct {
 		Count   int      `json:"count"`
 		Configs []string `json:"configs"`
@@ -561,7 +569,6 @@ func (p *LogProject) ApplyConfigToMachineGroup(confName, groupName string) (err 
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
-
 	uri := fmt.Sprintf("/machinegroups/%v/configs/%v", groupName, confName)
 	r, err := request(p, "PUT", uri, h, nil)
 	if err != nil {
@@ -570,10 +577,11 @@ func (p *LogProject) ApplyConfigToMachineGroup(confName, groupName string) (err 
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -582,7 +590,6 @@ func (p *LogProject) RemoveConfigFromMachineGroup(confName, groupName string) (e
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
-
 	uri := fmt.Sprintf("/machinegroups/%v/configs/%v", groupName, confName)
 	r, err := request(p, "DELETE", uri, h, nil)
 	if err != nil {
@@ -591,9 +598,10 @@ func (p *LogProject) RemoveConfigFromMachineGroup(confName, groupName string) (e
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		err := &Error{}
+		err := new(Error)
 		json.Unmarshal(buf, err)
 		return err
 	}
+
 	return nil
 }

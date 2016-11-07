@@ -17,7 +17,7 @@ type InputDetail struct {
 
 // OutputDetail defines output
 type OutputDetail struct {
-	Endpoint     string `json:"endpoint"`
+	ProjectName  string `json:"projectName"`
 	LogStoreName string `json:"logstoreName"`
 }
 

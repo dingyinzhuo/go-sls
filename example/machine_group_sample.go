@@ -2,16 +2,12 @@ package main
 
 import (
 	"fmt"
+	sls "go-sls"
+	"go-sls/example/util"
 	"os"
-	sls "sls-sdk-go"
 )
 
-var project = &sls.LogProject{
-	Name:            "loghub-test",
-	Endpoint:        "cn-hangzhou.log.aliyuncs.com",
-	AccessKeyID:     "xxx",
-	AccessKeySecret: "xxx",
-}
+var projectName = "another-project"
 var logstore = "demo-store"
 
 func main() {
@@ -19,7 +15,16 @@ func main() {
 	testConf := "test-conf"
 	testMachineGroup := "test-mg"
 	testService := "demo-service"
-	err := createMachineGroup(testMachineGroup)
+	exist, err := checkMachineGroupExist(testMachineGroup)
+	if err != nil {
+		fmt.Println("check machine group fail:", err)
+		os.Exit(1)
+	}
+	if exist {
+		util.Project.DeleteMachineGroup(testMachineGroup)
+	}
+
+	err = createMachineGroup(testMachineGroup)
 	if err != nil {
 		fmt.Println("create machine group:" + testMachineGroup + " fail")
 		fmt.Println(err)
@@ -33,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	exist, err := checkMachineGroupExist(testMachineGroup)
+	exist, err = checkMachineGroupExist(testMachineGroup)
 	if err != nil {
 		fmt.Println("check machine group exist fail:")
 		fmt.Println(err)
@@ -44,7 +49,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = createConfig(testConf, logstore, testService)
+	exist, err = util.Project.CheckConfigExist(testConf)
+	if err != nil {
+		fmt.Println("check config exist fail:", err)
+		os.Exit(1)
+	}
+	if exist {
+		util.Project.DeleteConfig(testConf)
+	}
+
+	err = createConfig(testConf, projectName, logstore, testService)
 	if err != nil {
 		fmt.Println("create config fail:")
 		fmt.Println(err)
@@ -85,7 +99,7 @@ func main() {
 }
 
 func deleteConfig(confName string) (err error) {
-	err = project.DeleteConfig(confName)
+	err = util.Project.DeleteConfig(confName)
 	if err != nil {
 		return err
 	}
@@ -93,14 +107,14 @@ func deleteConfig(confName string) (err error) {
 }
 
 func applyConfToMachineGroup(confName string, mgname string) (err error) {
-	err = project.ApplyConfigToMachineGroup(confName, mgname)
+	err = util.Project.ApplyConfigToMachineGroup(confName, mgname)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func createConfig(configName string, logstore string, serviceName string) (err error) {
+func createConfig(configName string, projectName, logstore string, serviceName string) (err error) {
 	// 日志所在的父目录
 	logPath := "/var/log/lambda/" + serviceName
 	// 日志文件的pattern，如functionName.LOG
@@ -135,7 +149,7 @@ func createConfig(configName string, logstore string, serviceName string) (err e
 		TopicFormat:   topicFormat,
 	}
 	outputDetail := sls.OutputDetail{
-		Endpoint:     "",
+		ProjectName:  projectName,
 		LogStoreName: logstore,
 	}
 	config := &sls.LogConfig{
@@ -145,7 +159,7 @@ func createConfig(configName string, logstore string, serviceName string) (err e
 		InputDetail:  inputDetail,
 		OutputDetail: outputDetail,
 	}
-	err = project.CreateConfig(config)
+	err = util.Project.CreateConfig(config)
 	if err != nil {
 		return err
 	}
@@ -153,14 +167,14 @@ func createConfig(configName string, logstore string, serviceName string) (err e
 }
 
 func checkMachineGroupExist(groupName string) (exist bool, err error) {
-	exist, err = project.CheckMachineGroupExist(groupName)
+	exist, err = util.Project.CheckMachineGroupExist(groupName)
 	if err != nil {
 		return false, err
 	}
 	return exist, nil
 }
 func getMachineGroup(groupName string) (err error) {
-	_, err = project.GetMachineGroup(groupName)
+	_, err = util.Project.GetMachineGroup(groupName)
 	if err != nil {
 		return err
 	}
@@ -168,7 +182,7 @@ func getMachineGroup(groupName string) (err error) {
 }
 
 func deleteMachineGroup(groupName string) (err error) {
-	err = project.DeleteMachineGroup(groupName)
+	err = util.Project.DeleteMachineGroup(groupName)
 	if err != nil {
 		return err
 	}
@@ -187,7 +201,7 @@ func createMachineGroup(groupName string) (err error) {
 		MachineIDList: machineList,
 		Attribute:     attribute,
 	}
-	err = project.CreateMachineGroup(machineGroup)
+	err = util.Project.CreateMachineGroup(machineGroup)
 	if err != nil {
 		return err
 	}

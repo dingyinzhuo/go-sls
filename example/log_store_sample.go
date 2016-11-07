@@ -2,25 +2,21 @@ package main
 
 import (
 	"fmt"
+	sls "go-sls"
+	"go-sls/example/util"
 	"os"
-	sls "sls-sdk-go"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 )
 
-var project = &sls.LogProject{
-	Name:            "loghub-test",
-	Endpoint:        "cn-hangzhou.log.aliyuncs.com",
-	AccessKeyID:     "xxx",
-	AccessKeySecret: "xxx",
-}
+var projectName = "another-project"
 var logstore = "demo-store"
 
 func main() {
-	list, err := project.ListLogStore()
+	list, err := util.Project.ListLogStore()
 	for _, v := range list {
-		_, err := project.GetLogStore(v)
+		_, err := util.Project.GetLogStore(v)
 		if err != nil {
 			fmt.Println("GetLogStore fail:" + v)
 			fmt.Println(err)
@@ -29,7 +25,7 @@ func main() {
 	}
 
 	teststore := "store5"
-	err = project.CreateLogStore(teststore, 1, 1)
+	err = util.Project.CreateLogStore(teststore, 1, 1)
 	if err != nil {
 		if !(err.(*sls.Error).Code == "SLSLogStoreAlreadyExist") {
 			fmt.Println("create logstore:" + teststore + " fail")
@@ -38,8 +34,8 @@ func main() {
 		}
 	}
 
-	project.UpdateLogStore(teststore, 2, 1)
-	err = project.DeleteLogStore(teststore)
+	util.Project.UpdateLogStore(teststore, 2, 1)
+	err = util.Project.DeleteLogStore(teststore)
 	if err != nil {
 		if !(err.(*sls.Error).Code == "SLSLogStoreNotExist") {
 			fmt.Println("delete log store:" + teststore + " fail")
@@ -48,7 +44,7 @@ func main() {
 		}
 	}
 
-	store, err := project.GetLogStore(logstore)
+	store, err := util.Project.GetLogStore(logstore)
 	_, err = store.ListShards()
 	if err != nil {
 		fmt.Println("ListShards fail:")
